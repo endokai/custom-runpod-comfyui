@@ -1,0 +1,50 @@
+name: Build and push Docker images
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: endokai/custom-runpod
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - file: Dockerfile
+            tag: latest
+            platforms: linux/amd64,linux/arm64
+          - file: comfyui-cuda12.8.Dockerfile
+            tag: cuda12.8
+            platforms: linux/amd64
+          - file: comfyui-cuda13.0.Dockerfile
+            tag: cuda13.0
+            platforms: linux/amd64
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          push: true
+          tags: docker.io/${{ env.IMAGE_NAME }}:${{ matrix.tag }}
+          platforms: ${{ matrix.platforms }}
