@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: endokai/custom-runpod
+  IMAGE_NAME: endokai/custom-runpod-comfyui
 
 jobs:
   build-and-push:
